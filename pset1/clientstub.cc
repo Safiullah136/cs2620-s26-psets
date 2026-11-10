@@ -128,6 +128,7 @@ private:
     {
         void *got_tag;
         bool ok;
+        uint64_t _expected = 1;
 
         while (_cq.Next(&got_tag, &ok))
         {
@@ -139,6 +140,8 @@ private:
 
             if (ok && call->status.ok())
             {
+
+                assert(call->serial == _expected++); // _expected starts at 1, poll thread only
 
                 std::string valuestr = call->response.value();
 

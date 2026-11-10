@@ -235,3 +235,7 @@ If you see serverstub.cc:128, we create a TryCall object by passing asyncService
 Then we loop until cq gets shutdown (cq->Next returns false when cq gets shutdown).
 
 The server implementation requests an RPC call (serverstub.cc:34) with a tag and then waits for the completion queue to return the tag (serverstub.cc:170).
+
+Client receives responses in order in CQ.
+
+<!-- ServerAsyncResponseWriter::Finish(serverstub:114) is the actual call that initiates sending the response back to the client in gRPC (C++). -->
