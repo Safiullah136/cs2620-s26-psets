@@ -11,7 +11,7 @@ ifeq ($(V),1)
 cmake_verbose := --verbose
 endif
 
-targets = ping ctconsensus ctstubborn
+targets = ping ctconsensus ctstubborn ctfail
 
 all:
 	cmake -B build $(cmake_build)

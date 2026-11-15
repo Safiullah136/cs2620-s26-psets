@@ -52,14 +52,18 @@ struct channel {
     // send a message on this channel
     cot::task<> send(message_type m);
 
+    // permanently fail this channel: drop all future messages
+    void fail() noexcept { failed_ = true; }
+
 
 private:
     id_type from_;
     port<T>& to_port_;
     bool verbose_;
+    bool failed_ = false;
     network<T>& net_;
 
-    cot::clock::duration link_delay_ = 20ms; // time for message to arrive
+    cot::clock::duration link_delay_ = 20ms; // base time for message to arrive
     cot::clock::duration send_delay_ = 1ms;  // time before sender can continue
 
     cot::task<> send_after(cot::clock::duration, message_type);
@@ -105,6 +109,7 @@ private:
     bool verbose_;
     network<T>& net_;
 
+    cot::clock::duration receive_delay_ = 5ms;  // time before receiver can continue
     std::deque<message_type> messageq_;
     cot::event receiver_event_;
 };
@@ -123,8 +128,10 @@ cot::task<> channel<T>::send(message_type m) {
                    message_traits_type::print_transform(m));
     }
 
-    // after `link_delay_`, place the message in the receiver’s queue
-    send_after(link_delay_, std::move(m)).detach();
+    // after a randomized delay, place the message in the receiver’s queue;
+    // delay is a base plus an exponentially-distributed extra amount
+    auto delay = link_delay_ + net_.exponential(link_delay_ / 2);
+    send_after(delay, std::move(m)).detach();
 
     // sending a message takes time
     co_await cot::after(send_delay_);
@@ -137,6 +144,11 @@ cot::task<> channel<T>::send(message_type m) {
 template <typename T>
 cot::task<> channel<T>::send_after(cot::clock::duration delay, message_type m) {
     co_await cot::after(delay);
+
+    // if this link has failed, drop the message
+    if (failed_) {
+        co_return;
+    }
 
     // record this message in the destination message queue
     to_port_.messageq_.emplace_back(std::move(m));
@@ -168,6 +180,8 @@ cot::task<T> port<T>::receive() {
 
     // NB could also model receive_delay_, like `send()`’s send_delay_,
     // but don’t bother in handout code
+
+    co_await cot::after(receive_delay_);
 
     co_return m;
 }

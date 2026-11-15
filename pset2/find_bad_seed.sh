@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-BIN="${BIN:-./build/ctstubborn}"
+BIN="${BIN:-./build/ctfail}"
 COUNT="${1:-100000}"
 
 if [[ ! -x "$BIN" ]]; then
@@ -27,7 +27,7 @@ echo "searching for a bad seed ($COUNT seeds per run)" >&2
 # just starts the next one; a failing batch exits non-zero, so we stop.
 for ((run = 1; ; run++)); do
     echo "  run $run: trying $COUNT seeds..." >&2
-    if "$BIN" -R "$COUNT" -q; then
+    if "$BIN" -n 5 -R "$COUNT" -q; then
         continue
     fi
     # The program printed "*** FAILURE on seed ..." and exited non-zero.

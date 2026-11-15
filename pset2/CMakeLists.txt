@@ -45,3 +45,8 @@ add_executable(ctstubborn
     ctstubborn.cc
     $<TARGET_OBJECTS:Cotamer>
 )
+
+add_executable(ctfail
+    ctfail.cc
+    $<TARGET_OBJECTS:Cotamer>
+)
